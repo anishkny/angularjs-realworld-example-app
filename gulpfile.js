@@ -3,6 +3,7 @@ var notify        = require('gulp-notify');
 var source        = require('vinyl-source-stream');
 var browserify    = require('browserify');
 var babelify      = require('babelify');
+var envify        = require('envify/custom');
 var ngAnnotate    = require('browserify-ngannotate');
 var browserSync   = require('browser-sync').create();
 var rename        = require('gulp-rename');
@@ -13,6 +14,12 @@ var merge         = require('merge-stream');
 // Where our files are located
 var jsFiles   = "src/js/**/*.js";
 var viewFiles = "src/js/**/*.html";
+
+// Be default, access the production backend
+// To override, set the environment variable "API_ENDPOINT" before calling gulp
+if (!process.env.API_ENDPOINT) {
+  process.env.API_ENDPOINT = 'https://conduit.productionready.io/api';
+}
 
 var interceptErrors = function(error) {
   var args = Array.prototype.slice.call(arguments);
@@ -30,6 +37,7 @@ var interceptErrors = function(error) {
 
 gulp.task('browserify', ['views'], function() {
   return browserify('./src/js/app.js')
+      .transform(envify())
       .transform(babelify, {presets: ["es2015"]})
       .transform(ngAnnotate)
       .bundle()
